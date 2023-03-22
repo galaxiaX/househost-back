@@ -111,7 +111,7 @@ app.get("/profile", async (req, res) => {
   }
 });
 
-app.post("/logout", (res) => {
+app.post("/logout", (req, res) => {
   res.cookies("token", "").json(true);
 });
 
