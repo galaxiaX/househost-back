@@ -18,7 +18,7 @@ dotenv.config();
 const app = express();
 const port = process.env.PORT || 3000;
 const bcryptSalt = bcrypt.genSaltSync(10);
-const jwtSecret = "ffneoijf29f8sudhf309fn";
+const jwtSecret = process.env.JWT_SECRET;
 
 const storage = multer.memoryStorage();
 const upload = multer({ storage: storage });
@@ -39,6 +39,7 @@ mongoose.connect(process.env.MONGO_URL);
 
 function getUserDataFromReq(req) {
   return new Promise((resolve, reject) => {
+    // console.log("token:", req.cookies.token);
     jwt.verify(req.cookies.token, jwtSecret, {}, async (err, userData) => {
       if (err) {
         console.error(err);
