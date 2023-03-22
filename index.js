@@ -28,12 +28,7 @@ const generateFileName = (bytes = 32) =>
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
-app.use(
-  cors({
-    credentials: true,
-    origin: process.env.MAIN_URL || "http://localhost:5173",
-  })
-);
+app.use(cors());
 
 mongoose.connect(process.env.MONGO_URL);
 
