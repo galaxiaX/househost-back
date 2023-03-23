@@ -34,12 +34,20 @@ app.use(
     origin: process.env.MAIN_URL || "http://localhost:5173",
   })
 );
+app.use((req, res, next) => {
+  res.header(
+    "Access-Control-Allow-Origin",
+    process.env.MAIN_URL || "http://localhost:5173"
+  );
+  res.header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE");
+  res.header("Access-Control-Allow-Headers", "Content-Type, Authorization");
+  next();
+});
 
 mongoose.connect(process.env.MONGO_URL);
 
 function getUserDataFromReq(req) {
   return new Promise((resolve, reject) => {
-    console.log("token:", req.cookies.token);
     jwt.verify(req.cookies.token, jwtSecret, {}, async (err, userData) => {
       if (err) {
         console.error(err);
