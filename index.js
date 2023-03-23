@@ -1,27 +1,36 @@
 import express from "express";
 import mongoose from "mongoose";
 import cors from "cors";
-import User from "./models/User.js";
-import Place from "./models/Place.js";
-import Booking from "./models/Booking.js";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import cookieParser from "cookie-parser";
-import dotenv from "dotenv";
 import multer from "multer";
 import crypto from "crypto";
-import { deleteImg, uploadImg } from "./s3.js";
+import dotenv from "dotenv";
 import axios from "axios";
+import { deleteImg, uploadImg } from "./s3.js";
+import User from "./models/User.js";
+import Place from "./models/Place.js";
+import Booking from "./models/Booking.js";
 
 dotenv.config();
 
 const app = express();
 const port = process.env.PORT || 3000;
-const bcryptSalt = bcrypt.genSaltSync(10);
 const jwtSecret = process.env.JWT_SECRET;
 
+mongoose
+  .connect(process.env.MONGO_URL)
+  .then(() => {
+    console.log("Connected to MongoDB");
+  })
+  .catch((err) => {
+    console.error(`Error connecting to MongoDB: ${err}`);
+  });
+
+const bcryptSalt = bcrypt.genSaltSync(10);
 const storage = multer.memoryStorage();
-const upload = multer({ storage: storage });
+const upload = multer({ storage });
 const generateFileName = (bytes = 32) =>
   crypto.randomBytes(bytes).toString("hex");
 
@@ -35,14 +44,12 @@ app.use(
   })
 );
 
-mongoose.connect(process.env.MONGO_URL);
-
 function getUserDataFromReq(req) {
   return new Promise((resolve, reject) => {
     jwt.verify(req.cookies.token, jwtSecret, {}, async (err, userData) => {
       if (err) {
         console.error(err);
-        reject(err);
+        reject(new Error("Unauthorized"));
       }
       resolve(userData);
     });
@@ -50,51 +57,46 @@ function getUserDataFromReq(req) {
 }
 
 app.post("/signup", async (req, res) => {
-  const { firstname, lastname, email, password } = req.body;
-
   try {
+    const { firstname, lastname, email, password } = req.body;
     const userDoc = await User.create({
       firstname,
       lastname,
       email,
       password: bcrypt.hashSync(password, bcryptSalt),
     });
-
     res.json(userDoc);
   } catch (err) {
-    res.status(422).json(err);
+    res.status(422).json({ error: "Failed to create user" });
   }
 });
 
 app.post("/login", async (req, res) => {
-  const { email, password } = req.body;
-  const userDoc = await User.findOne({ email });
-  if (userDoc) {
-    const passOk = bcrypt.compare(password, userDoc.password);
-    if (passOk) {
-      jwt.sign(
-        { email: userDoc.email, id: userDoc._id },
-        jwtSecret,
-        {},
-        (err, token) => {
-          if (err) {
-            console.error(err);
-            res.status(500).json({ error: "Internal server error" });
-          } else {
-            res
-              .cookie("token", token, {
-                sameSite: "none",
-                secure: true,
-              })
-              .json(userDoc);
-          }
-        }
-      );
+  try {
+    const { email, password } = req.body;
+    const userDoc = await User.findOne({ email });
+    if (userDoc) {
+      const passOk = bcrypt.compareSync(password, userDoc.password);
+      if (passOk) {
+        const token = jwt.sign(
+          { email: userDoc.email, id: userDoc._id },
+          jwtSecret
+        );
+        res
+          .cookie("token", token, {
+            sameSite: "none",
+            secure: true,
+          })
+          .json(userDoc);
+      } else {
+        res.status(422).json({ error: "Incorrect password" });
+      }
     } else {
-      res.status(422).json({ error: "Incorrect password" });
+      res.status(404).json({ error: "User not found" });
     }
-  } else {
-    res.status(404).json({ error: "User not found" });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Failed to log in" });
   }
 });
 
@@ -117,7 +119,7 @@ app.get("/profile", async (req, res) => {
 });
 
 app.post("/logout", (req, res) => {
-  res.cookie("token", "").json(true);
+  res.clearCookie("token").json(true);
 });
 
 app.post("/upload-by-link", async (req, res) => {
@@ -338,4 +340,6 @@ app.get("/places/:placeId/bookings", async (req, res) => {
   }
 });
 
-app.listen(port, () => console.log(`Back-end app listening on port ${port}!`));
+app.listen(port, () =>
+  console.log(`Server running at http://localhost:${port}`)
+);
