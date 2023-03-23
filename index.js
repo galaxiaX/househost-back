@@ -12,7 +12,6 @@ import multer from "multer";
 import crypto from "crypto";
 import { deleteImg, uploadImg } from "./s3.js";
 import axios from "axios";
-// import session from "express-session";
 
 dotenv.config();
 
@@ -29,13 +28,6 @@ const generateFileName = (bytes = 32) =>
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
-// app.use(
-//   session({
-//     secret: process.env.SESSION_SECRET,
-//     resave: false,
-//     saveUninitialized: false,
-//   })
-// );
 app.use(
   cors({
     origin: process.env.MAIN_URL || "http://localhost:5173",
@@ -56,25 +48,6 @@ function getUserDataFromReq(req) {
     });
   });
 }
-// function getUserDataFromReq(req) {
-//   return new Promise((resolve, reject) => {
-//     jwt.verify(req.session.token, jwtSecret, {}, async (err, userData) => {
-//       if (err) {
-//         console.error(err);
-//         reject(err);
-//       }
-//       resolve(userData);
-//     });
-//   });
-// }
-
-// app.get("/set-cookie", (req, res) => {
-//   res.cookie("my-cookie", "cookie-value", {
-//     sameSite: "none",
-//     secure: true,
-//   });
-//   res.send("Cookie set successfully");
-// });
 
 app.post("/signup", async (req, res) => {
   const { firstname, lastname, email, password } = req.body;
@@ -114,8 +87,6 @@ app.post("/login", async (req, res) => {
                 secure: true,
               })
               .json(userDoc);
-            // req.session.token = token;
-            // res.json(userDoc);
           }
         }
       );
@@ -129,7 +100,6 @@ app.post("/login", async (req, res) => {
 
 app.get("/profile", async (req, res) => {
   const { token } = req.cookies;
-  // const { token } = req.session;
   if (token) {
     try {
       const userData = jwt.verify(token, jwtSecret);
@@ -148,8 +118,6 @@ app.get("/profile", async (req, res) => {
 
 app.post("/logout", (req, res) => {
   res.cookie("token", "").json(true);
-  // req.session.destroy();
-  // res.json(true);
 });
 
 app.post("/upload-by-link", async (req, res) => {
@@ -180,7 +148,6 @@ app.post("/upload", upload.array("photos", 50), async (req, res) => {
 
 app.post("/places", (req, res) => {
   const { token } = req.cookies;
-  // const { token } = req.session;
   const {
     title,
     address,
@@ -222,7 +189,6 @@ app.post("/places", (req, res) => {
 
 app.get("/user-places", (req, res) => {
   const { token } = req.cookies;
-  // const { token } = req.session;
   jwt.verify(token, jwtSecret, {}, async (err, userData) => {
     if (err) throw err;
     const { id } = userData;
@@ -237,7 +203,6 @@ app.get("/places/:id", async (req, res) => {
 
 app.put("/places", async (req, res) => {
   const { token } = req.cookies;
-  // const { token } = req.session;
   const {
     id,
     title,
@@ -260,10 +225,7 @@ app.put("/places", async (req, res) => {
     const placeDoc = await Place.findById(id);
 
     if (userData.id === placeDoc.owner.toString()) {
-      // Get old photos of the place
       const oldPhotos = placeDoc.photos;
-
-      // Update the place with the new data
       placeDoc.set({
         title,
         address,
@@ -282,7 +244,6 @@ app.put("/places", async (req, res) => {
 
       await placeDoc.save();
 
-      // Remove unused images from S3 bucket
       const usedPhotos = new Set(placeDoc.photos);
       for (const photo of oldPhotos) {
         if (!usedPhotos.has(photo)) {
@@ -334,15 +295,12 @@ app.delete("/places/:placeId", async (req, res) => {
   try {
     const placeDoc = await Place.findById(placeId);
     if (placeDoc) {
-      // Delete all bookings with matching place ID
       await Booking.deleteMany({ place: placeId });
 
-      // Remove all images of the place from S3 bucket
       for (let i in placeDoc.photos) {
         const image = placeDoc.photos[i];
         await deleteImg(image);
       }
-      // Delete the place
       await Place.findByIdAndDelete(placeId);
 
       res.status(200).send(`Place with id ${placeId} deleted successfully`);
@@ -381,5 +339,3 @@ app.get("/places/:placeId/bookings", async (req, res) => {
 });
 
 app.listen(port, () => console.log(`Back-end app listening on port ${port}!`));
-
-export default app;
