@@ -6,13 +6,13 @@ import Place from "./models/Place.js";
 import Booking from "./models/Booking.js";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
-// import cookieParser from "cookie-parser";
+import cookieParser from "cookie-parser";
 import dotenv from "dotenv";
 import multer from "multer";
 import crypto from "crypto";
 import { deleteImg, uploadImg } from "./s3.js";
 import axios from "axios";
-import session from "express-session";
+// import session from "express-session";
 
 dotenv.config();
 
@@ -28,15 +28,14 @@ const generateFileName = (bytes = 32) =>
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
-// app.use(cookieParser());
-app.use(
-  session({
-    secret: process.env.SESSION_SECRET,
-    resave: false,
-    saveUninitialized: false,
-  })
-);
-
+app.use(cookieParser());
+// app.use(
+//   session({
+//     secret: process.env.SESSION_SECRET,
+//     resave: false,
+//     saveUninitialized: false,
+//   })
+// );
 app.use(
   cors({
     origin: process.env.MAIN_URL || "http://localhost:5173",
@@ -46,20 +45,9 @@ app.use(
 
 mongoose.connect(process.env.MONGO_URL);
 
-// function getUserDataFromReq(req) {
-//   return new Promise((resolve, reject) => {
-//     jwt.verify(req.cookies.token, jwtSecret, {}, async (err, userData) => {
-//       if (err) {
-//         console.error(err);
-//         reject(err);
-//       }
-//       resolve(userData);
-//     });
-//   });
-// }
 function getUserDataFromReq(req) {
   return new Promise((resolve, reject) => {
-    jwt.verify(req.session.token, jwtSecret, {}, async (err, userData) => {
+    jwt.verify(req.cookies.token, jwtSecret, {}, async (err, userData) => {
       if (err) {
         console.error(err);
         reject(err);
@@ -68,6 +56,17 @@ function getUserDataFromReq(req) {
     });
   });
 }
+// function getUserDataFromReq(req) {
+//   return new Promise((resolve, reject) => {
+//     jwt.verify(req.session.token, jwtSecret, {}, async (err, userData) => {
+//       if (err) {
+//         console.error(err);
+//         reject(err);
+//       }
+//       resolve(userData);
+//     });
+//   });
+// }
 
 // app.get("/set-cookie", (req, res) => {
 //   res.cookie("my-cookie", "cookie-value", {
@@ -109,9 +108,14 @@ app.post("/login", async (req, res) => {
             console.error(err);
             res.status(500).json({ error: "Internal server error" });
           } else {
-            // res.cookie("token", token).json(userDoc);
-            req.session.token = token;
-            res.json(userDoc);
+            res
+              .cookie("token", token, {
+                sameSite: "none",
+                secure: true,
+              })
+              .json(userDoc);
+            // req.session.token = token;
+            // res.json(userDoc);
           }
         }
       );
@@ -124,8 +128,8 @@ app.post("/login", async (req, res) => {
 });
 
 app.get("/profile", async (req, res) => {
-  // const { token } = req.cookies;
-  const { token } = req.session;
+  const { token } = req.cookies;
+  // const { token } = req.session;
   if (token) {
     try {
       const userData = jwt.verify(token, jwtSecret);
@@ -143,9 +147,9 @@ app.get("/profile", async (req, res) => {
 });
 
 app.post("/logout", (req, res) => {
-  // res.cookie("token", "").json(true);
-  req.session.destroy();
-  res.json(true);
+  res.cookie("token", "").json(true);
+  // req.session.destroy();
+  // res.json(true);
 });
 
 app.post("/upload-by-link", async (req, res) => {
@@ -175,8 +179,8 @@ app.post("/upload", upload.array("photos", 50), async (req, res) => {
 });
 
 app.post("/places", (req, res) => {
-  // const { token } = req.cookies;
-  const { token } = req.session;
+  const { token } = req.cookies;
+  // const { token } = req.session;
   const {
     title,
     address,
@@ -217,8 +221,8 @@ app.post("/places", (req, res) => {
 });
 
 app.get("/user-places", (req, res) => {
-  // const { token } = req.cookies;
-  const { token } = req.session;
+  const { token } = req.cookies;
+  // const { token } = req.session;
   jwt.verify(token, jwtSecret, {}, async (err, userData) => {
     if (err) throw err;
     const { id } = userData;
@@ -232,8 +236,8 @@ app.get("/places/:id", async (req, res) => {
 });
 
 app.put("/places", async (req, res) => {
-  // const { token } = req.cookies;
-  const { token } = req.session;
+  const { token } = req.cookies;
+  // const { token } = req.session;
   const {
     id,
     title,
