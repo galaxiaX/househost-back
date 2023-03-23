@@ -28,13 +28,6 @@ const generateFileName = (bytes = 32) =>
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
-app.get("/set-cookie", (req, res) => {
-  res.cookie("my-cookie", "cookie-value", {
-    sameSite: "none",
-    secure: true,
-  });
-  res.send("Cookie set successfully");
-});
 app.use(
   cors({
     origin: process.env.MAIN_URL || "http://localhost:5173",
@@ -64,6 +57,14 @@ function getUserDataFromReq(req) {
     });
   });
 }
+
+app.get("/set-cookie", (req, res) => {
+  res.cookie("my-cookie", "cookie-value", {
+    sameSite: "none",
+    secure: true,
+  });
+  res.send("Cookie set successfully");
+});
 
 app.post("/signup", async (req, res) => {
   const { firstname, lastname, email, password } = req.body;
