@@ -8,6 +8,8 @@ import multer from "multer";
 import crypto from "crypto";
 import dotenv from "dotenv";
 import axios from "axios";
+import { fileURLToPath } from "url";
+import { dirname } from "path";
 import { deleteImg, uploadImg } from "./s3.js";
 import User from "./models/User.js";
 import Place from "./models/Place.js";
@@ -18,6 +20,8 @@ dotenv.config();
 const app = express();
 const port = process.env.PORT || 3000;
 const jwtSecret = process.env.JWT_SECRET;
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
 
 mongoose
   .connect(process.env.MONGO_URL)
@@ -339,6 +343,12 @@ app.get("/places/:placeId/bookings", async (req, res) => {
     console.error(error);
     res.status(500).json({ message: "Server error" });
   }
+});
+
+app.get("/*", (req, res) => {
+  res.sendFile(new URL("path/to/index.html", import.meta.url).pathname, {
+    root: __dirname,
+  });
 });
 
 app.listen(port, () =>
