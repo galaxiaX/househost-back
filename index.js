@@ -269,8 +269,14 @@ app.put("/places", async (req, res) => {
 });
 
 app.get("/places", async (req, res) => {
-  const places = await Place.aggregate([{ $sample: { size: 1000 } }]);
-  res.json(places);
+  const places = await Place.aggregate([{ $sample: { size: 1000 } }]).exec();
+  places.toArray((err, result) => {
+    if (err) {
+      console.error(err);
+      return res.status(500).json({ error: "Server Error" });
+    }
+    res.json(result);
+  });
 });
 
 app.post("/bookings", async (req, res) => {
