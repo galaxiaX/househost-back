@@ -124,7 +124,7 @@ app.get("/profile", async (req, res) => {
 
 app.post("/logout", (req, res) => {
   res
-    .clearCookie("token", {
+    .cookie("token", null, {
       // domain: "househost-back.vercel.app",
       sameSite: "none",
       secure: true,
