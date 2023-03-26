@@ -269,9 +269,8 @@ app.put("/places", async (req, res) => {
 });
 
 app.get("/places", async (req, res) => {
-  const places = await Place.aggregate([{ $sample: { size: 1000 } }]).exec();
-  const result = await places.toArray();
-  res.json(result);
+  const places = await Place.find();
+  res.json(places);
 });
 
 app.post("/bookings", async (req, res) => {
