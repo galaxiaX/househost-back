@@ -269,7 +269,7 @@ app.put("/places", async (req, res) => {
 });
 
 app.get("/places", async (req, res) => {
-  const places = await Place.aggregate([{ $sample: { size: 100000 } }]);
+  const places = await Place.aggregate([{ $sample: { size: 1000 } }]);
   res.json(places);
 });
 
