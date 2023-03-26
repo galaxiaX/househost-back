@@ -118,9 +118,9 @@ app.get("/profile", async (req, res) => {
   }
 });
 
-app.post("/logout", (req, res) => {
-  res.clearCookie("token", { domain: "househost-back.vercel.app" }).json(true);
-});
+// app.post("/logout", (req, res) => {
+//   res.clearCookie("token", { domain: "househost-back.vercel.app" }).json(true);
+// });
 
 app.post("/logout", (req, res) => {
   res
