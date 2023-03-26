@@ -118,14 +118,9 @@ app.get("/profile", async (req, res) => {
   }
 });
 
-// app.post("/logout", (req, res) => {
-//   res.clearCookie("token", { domain: "househost-back.vercel.app" }).json(true);
-// });
-
 app.post("/logout", (req, res) => {
   res
     .clearCookie("token", {
-      // domain: "househost-back.vercel.app",
       sameSite: "none",
       secure: true,
     })
@@ -274,7 +269,7 @@ app.put("/places", async (req, res) => {
 });
 
 app.get("/places", async (req, res) => {
-  const places = await Place.find();
+  const places = await Place.aggregate([{ $sample: { size: 100000 } }]);
   res.json(places);
 });
 
