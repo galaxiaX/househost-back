@@ -119,7 +119,7 @@ app.get("/profile", async (req, res) => {
 });
 
 app.post("/logout", (req, res) => {
-  res.cookie("token", "").json(true);
+  res.clearCookie("token").json(true);
 });
 
 app.post("/upload-by-link", async (req, res) => {
