@@ -125,7 +125,7 @@ app.post("/logout", (req, res) => {
 app.post("/logout", (req, res) => {
   res
     .clearCookie("token", {
-      domain: "househost-back.vercel.app",
+      domain: "househost.vercel.app",
       sameSite: "none",
       secure: true,
     })
