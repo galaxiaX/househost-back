@@ -119,7 +119,7 @@ app.get("/profile", async (req, res) => {
 });
 
 app.post("/logout", (req, res) => {
-  res.clearCookie("token").json(true);
+  res.clearCookie("token", { domain: "househost-back.varcel.app" }).json(true);
 });
 
 app.post("/upload-by-link", async (req, res) => {
