@@ -119,7 +119,18 @@ app.get("/profile", async (req, res) => {
 });
 
 app.post("/logout", (req, res) => {
-  res.clearCookie("token", { domain: "househost-back.varcel.app" }).json(true);
+  res.clearCookie("token", { domain: "househost-back.vercel.app" }).json(true);
+});
+
+app.post("/logout", (req, res) => {
+  res
+    .clearCookie("token", {
+      domain: "househost-back.vercel.app",
+      sameSite: "none",
+      secure: true,
+    })
+    .set("Cache-Control", "no-store")
+    .json(true);
 });
 
 app.post("/upload-by-link", async (req, res) => {
