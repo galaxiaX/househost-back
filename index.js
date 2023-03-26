@@ -136,7 +136,8 @@ app.post("/upload-by-link", async (req, res) => {
       responseType: "arraybuffer",
     });
     await uploadImg(data, newFileName, headers["content-type"]);
-    res.json(newFileName);
+    const newFileUrl = `${process.env.IMG_URL}/${newFileName}`;
+    res.json(newFileUrl);
   } catch (err) {
     console.error(err);
     res.status(500).send("Error uploading image to S3");
@@ -144,14 +145,20 @@ app.post("/upload-by-link", async (req, res) => {
 });
 
 app.post("/upload", upload.array("photos", 50), async (req, res) => {
-  const uploadedFiles = [];
-  for (let i in req.files) {
-    const { buffer, mimetype } = req.files[i];
-    const newFileName = generateFileName();
-    await uploadImg(buffer, newFileName, mimetype);
-    uploadedFiles.push(newFileName);
+  try {
+    const uploadedFiles = [];
+    for (let i in req.files) {
+      const { buffer, mimetype } = req.files[i];
+      const newFileName = generateFileName();
+      await uploadImg(buffer, newFileName, mimetype);
+      const newFileUrl = `${process.env.IMG_URL}/${newFileName}`;
+      uploadedFiles.push(newFileUrl);
+    }
+    res.status(201).json(uploadedFiles);
+  } catch (err) {
+    console.error(err);
+    res.status(500).send("Error uploading image to S3");
   }
-  res.status(201).json(uploadedFiles);
 });
 
 app.post("/places", (req, res) => {
