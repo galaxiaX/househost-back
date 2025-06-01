@@ -67,8 +67,8 @@ function getUserDataFromReq(req) {
 
 app.get("/version", (req, res) => {
   res.json({
-    mainUrl: process.env.MAIN_URL,
-    version: "0.0.1",
+    mainUrl: process.env.MAIN_URL?.split(",")?.filter(Boolean),
+    version: "1.0.0",
     date: new Date().toISOString(),
   });
 });
