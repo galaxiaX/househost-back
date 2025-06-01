@@ -40,7 +40,7 @@ app.use(cookieParser());
 app.use(
   cors({
     origin: process.env.MAIN_URL || "http://localhost:5173",
-    credentials: true,
+    credentials: process.env.MAIN_URL !== "*" ? true : false,
   })
 );
 
