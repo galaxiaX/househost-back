@@ -56,6 +56,10 @@ function getUserDataFromReq(req) {
   });
 }
 
+app.get("/test", (req, res) => {
+  res.json(process.env.MAIN_URL);
+});
+
 app.post("/signup", async (req, res) => {
   try {
     const { firstname, lastname, email, password } = req.body;
