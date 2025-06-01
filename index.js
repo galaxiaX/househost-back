@@ -37,9 +37,18 @@ const generateFileName = (bytes = 32) =>
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
+const allowedOrigins = process.env.MAIN_URL?.split(",")?.filter(Boolean);
 app.use(
   cors({
-    origin: process.env.MAIN_URL || "http://localhost:5173",
+    origin: function (origin, callback) {
+      // allow requests with no origin (like mobile apps or curl)
+      if (!origin) return callback(null, true);
+      if (allowedOrigins.includes(origin)) {
+        return callback(null, true);
+      } else {
+        return callback(new Error("Not allowed by CORS"));
+      }
+    },
     credentials: true,
   })
 );
