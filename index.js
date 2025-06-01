@@ -56,8 +56,12 @@ function getUserDataFromReq(req) {
   });
 }
 
-app.get("/test", (req, res) => {
-  res.json(process.env.MAIN_URL);
+app.get("/version", (req, res) => {
+  res.json({
+    mainUrl: process.env.MAIN_URL,
+    version: "0.0.1",
+    date: new Date().toISOString(),
+  });
 });
 
 app.post("/signup", async (req, res) => {
